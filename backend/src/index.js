@@ -14,18 +14,12 @@ const supabase = createClient(
 
 app.locals.supabase = supabase;
 
-// Middleware - FIX CORS for production
-app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'https://podium-scheduler.vercel.app',
-    'https://podium-scheduler-*.vercel.app',
-    /https:\/\/.*\.vercel\.app$/
-  ],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// Enable CORS for all origins temporarily to debug
+app.use(cors());
+
+// Handle preflight requests
+app.options('*', cors());
+
 app.use(express.json());
 
 // Routes
