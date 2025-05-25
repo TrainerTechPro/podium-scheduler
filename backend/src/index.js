@@ -14,16 +14,14 @@ const supabase = createClient(
 
 app.locals.supabase = supabase;
 
-// Enable CORS for all origins temporarily to debug
+// Enable CORS
 app.use(cors());
-
-// Handle preflight requests
 app.options('*', cors());
-
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
+app.use('/api/schedule', require('./routes/schedule'));
 
 // Health check
 app.get('/api/health', (req, res) => {
