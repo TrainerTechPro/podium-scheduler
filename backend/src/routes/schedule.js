@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { authenticateToken } = require('../middleware/auth');
 
 // Get all session types
 router.get('/session-types', async (req, res) => {
@@ -46,6 +47,78 @@ router.get('/slots', async (req, res) => {
   } catch (error) {
     console.error('Error fetching schedule:', error);
     res.status(500).json({ error: 'Failed to fetch schedule' });
+  }
+});
+
+// Create schedule slots (with recurring)
+router.post('/slots', authenticateToken, async (req, res) => {
+  try {
+    const { session_type_id, start_date, start_time, duration_minutes, recurring, weeks_to_repeat } = req.body;
+    const supabase = req.app.locals.supabase;
+    
+    // Verify user is trainer
+    if (req.user.role !== 'trainer') {
+      return res.status(403).json({ error: 'Only trainers can create sessions' });
+    }
+
+    const slots = [];
+    const baseDate = new Date(start_date);
+    const [hours, minutes] = start_time.split(':');
+    
+    // Generate slots based on recurring pattern
+    const weeksToCreate = recurring === 'weekly' ? (weeks_to_repeat || 12) : 1;
+    
+    for (let week = 0; week < weeksToCreate; week++) {
+      const slotDate = new Date(baseDate);
+      slotDate.setDate(slotDate.getDate() + (week * 7));
+      
+      const startDateTime = new Date(slotDate);
+      startDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setMinutes(endDateTime.getMinutes() + duration_minutes);
+      
+      slots.push({
+        session_type_id,
+        start_time: startDateTime.toISOString(),
+        end_time: endDateTime.toISOString(),
+        recurring_pattern: recurring
+      });
+    }
+
+    const { data, error } = await supabase
+      .from('schedule_slots')
+      .insert(slots)
+      .select();
+
+    if (error) throw error;
+    res.json({ message: `Created ${slots.length} sessions`, data });
+  } catch (error) {
+    console.error('Error creating schedule slots:', error);
+    res.status(500).json({ error: 'Failed to create schedule slots' });
+  }
+});
+
+// Delete a schedule slot
+router.delete('/slots/:id', authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const supabase = req.app.locals.supabase;
+    
+    if (req.user.role !== 'trainer') {
+      return res.status(403).json({ error: 'Only trainers can delete sessions' });
+    }
+
+    const { error } = await supabase
+      .from('schedule_slots')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ message: 'Session deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting slot:', error);
+    res.status(500).json({ error: 'Failed to delete slot' });
   }
 });
 
