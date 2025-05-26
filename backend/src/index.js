@@ -17,15 +17,20 @@ app.locals.supabase = supabase;
 // Enable CORS
 app.use(cors());
 app.options('*', cors());
+
+// Raw body for Stripe webhooks
+app.use('/api/payments/stripe-webhook', express.raw({type: 'application/json'}));
+
+// JSON body for other routes
 app.use(express.json());
 
 // Routes
-try {
-  app.use('/api/auth', require('./routes/auth'));
-  app.use('/api/schedule', require('./routes/schedule'));
-} catch (error) {
-  console.error('Route loading error:', error);
-}
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/schedule', require('./routes/schedule'));
+app.use('/api/children', require('./routes/children'));
+app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/coach', require('./routes/coach'));
 
 // Health check
 app.get('/api/health', (req, res) => {
