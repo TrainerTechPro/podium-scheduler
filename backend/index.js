@@ -14,8 +14,17 @@ const supabase = createClient(
 
 app.locals.supabase = supabase;
 
-// Enable CORS
-app.use(cors());
+// Enable CORS with specific origin
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'https://podium-scheduler.vercel.app',
+    'https://podium-scheduler-73am9gfhk-tonys-projects-dcbbf849.vercel.app',
+    /https:\/\/podium-scheduler.*\.vercel\.app$/
+  ],
+  credentials: true
+}));
+
 app.options('*', cors());
 
 // Raw body for Stripe webhooks
