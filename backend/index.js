@@ -8,14 +8,15 @@ const cors = require('cors');
 const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+// Parse PORT as integer, Railway provides this automatically
+const PORT = parseInt(process.env.PORT) || 3001;
 
 // Debug: Log environment variables (remove in production)
 console.log('Environment check:', {
   SUPABASE_URL: process.env.SUPABASE_URL ? 'Set' : 'Not set',
   SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY ? 'Set' : 'Not set',
   JWT_SECRET: process.env.JWT_SECRET ? 'Set' : 'Not set',
-  PORT: process.env.PORT
+  PORT: PORT
 });
 
 // Initialize Supabase
@@ -67,12 +68,9 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Export for Vercel
-module.exports = app;
+// Start server
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-// Start server locally
-if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
-}
+module.exports = app;
