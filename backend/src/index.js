@@ -20,8 +20,12 @@ app.options('*', cors());
 app.use(express.json());
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/schedule', require('./routes/schedule'));
+try {
+  app.use('/api/auth', require('./routes/auth'));
+  app.use('/api/schedule', require('./routes/schedule'));
+} catch (error) {
+  console.error('Route loading error:', error);
+}
 
 // Health check
 app.get('/api/health', (req, res) => {
